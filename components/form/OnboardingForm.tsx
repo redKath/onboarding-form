@@ -1,36 +1,58 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { DeepPartial } from "react-hook-form";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Button } from "@/components/ui/Button";
-import type { OnboardingValues } from "@/lib/schemas";
 import { STEPS } from "@/lib/steps";
+import {
+  parseState,
+  readRaw,
+  saveState,
+  type Drafts,
+  type SavedState,
+} from "@/lib/storage";
 import { PersonalStep } from "./steps/PersonalStep";
 import { PreferencesStep } from "./steps/PreferencesStep";
 import { WorkStep } from "./steps/WorkStep";
 import { Stepper } from "./Stepper";
 
-type Drafts = {
-  [K in keyof OnboardingValues]: DeepPartial<OnboardingValues[K]>;
-};
+const noopSubscribe = () => () => {};
 
 export function OnboardingForm() {
-  const [current, setCurrent] = useState(0);
-  const [completed, setCompleted] = useState(0);
-  const [drafts, setDrafts] = useState<Drafts>({
-    personal: {},
-    work: {},
-    preferences: {},
-  });
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const isFirstRender = useRef(true);
+  // Server snapshot is undefined, so saved progress is only read on the client without a hydration mismatch.
+  const raw = useSyncExternalStore(noopSubscribe, readRaw, () => undefined);
+  if (raw === undefined) {
+    return (
+      <p aria-busy="true" className="text-zinc-500">
+        Loading...
+      </p>
+    );
+  }
+  return <Wizard initial={parseState(raw)} />;
+}
 
-  // Move focus to the step heading on navigation, not on initial load.
+function Wizard({ initial }: { initial: SavedState | null }) {
+  const [current, setCurrent] = useState(initial?.current ?? 0);
+  const [completed, setCompleted] = useState(initial?.completed ?? 0);
+  const [drafts, setDrafts] = useState<Drafts>(
+    initial?.drafts ?? { personal: {}, work: {}, preferences: {} },
+  );
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const prevStep = useRef(current);
+
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    saveState({ current, completed, drafts });
+  }, [current, completed, drafts]);
+
+  // Move focus to the step heading when the step changes, not on initial load or restore.
+  useEffect(() => {
+    if (prevStep.current === current) return;
+    prevStep.current = current;
     headingRef.current?.focus();
   }, [current]);
 
