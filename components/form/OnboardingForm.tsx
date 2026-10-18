@@ -7,9 +7,10 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Button } from "@/components/ui/Button";
+import type { OnboardingValues } from "@/lib/schemas";
 import { STEPS } from "@/lib/steps";
 import {
+  clearState,
   parseState,
   readRaw,
   saveState,
@@ -18,12 +19,15 @@ import {
 } from "@/lib/storage";
 import { PersonalStep } from "./steps/PersonalStep";
 import { PreferencesStep } from "./steps/PreferencesStep";
+import { ReviewStep } from "./steps/ReviewStep";
 import { WorkStep } from "./steps/WorkStep";
 import { Stepper } from "./Stepper";
+import { SuccessScreen } from "./SuccessScreen";
 
 const noopSubscribe = () => () => {};
 
 export function OnboardingForm() {
+  const [session, setSession] = useState(0);
   // Server snapshot is undefined, so saved progress is only read on the client without a hydration mismatch.
   const raw = useSyncExternalStore(noopSubscribe, readRaw, () => undefined);
   if (raw === undefined) {
@@ -33,21 +37,36 @@ export function OnboardingForm() {
       </p>
     );
   }
-  return <Wizard initial={parseState(raw)} />;
+
+  function reset() {
+    clearState();
+    setSession((n) => n + 1);
+  }
+
+  return <Wizard key={session} initial={parseState(raw)} onReset={reset} />;
 }
 
-function Wizard({ initial }: { initial: SavedState | null }) {
+type WizardProps = { initial: SavedState | null; onReset: () => void };
+
+function Wizard({ initial, onReset }: WizardProps) {
   const [current, setCurrent] = useState(initial?.current ?? 0);
   const [completed, setCompleted] = useState(initial?.completed ?? 0);
   const [drafts, setDrafts] = useState<Drafts>(
     initial?.drafts ?? { personal: {}, work: {}, preferences: {} },
   );
+  const [result, setResult] = useState<OnboardingValues | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const prevStep = useRef(current);
 
   useEffect(() => {
-    saveState({ current, completed, drafts });
-  }, [current, completed, drafts]);
+    if (result) return;
+    const pristine =
+      current === 0 &&
+      completed === 0 &&
+      Object.values(drafts).every((d) => Object.keys(d).length === 0);
+    if (pristine) clearState();
+    else saveState({ current, completed, drafts });
+  }, [current, completed, drafts, result]);
 
   // Move focus to the step heading when the step changes, not on initial load or restore.
   useEffect(() => {
@@ -68,7 +87,14 @@ function Wizard({ initial }: { initial: SavedState | null }) {
     setCurrent(current + 1);
   }
 
+  function submit(values: OnboardingValues) {
+    clearState();
+    setResult(values);
+  }
+
   const back = current > 0 ? () => setCurrent(current - 1) : undefined;
+
+  if (result) return <SuccessScreen values={result} onReset={onReset} />;
 
   return (
     <div className="space-y-8">
@@ -114,14 +140,12 @@ function Wizard({ initial }: { initial: SavedState | null }) {
           />
         )}
         {current === 3 && (
-          <>
-            <p className="text-zinc-600">Review is added in a later PR.</p>
-            <div className="mt-8">
-              <Button variant="secondary" onClick={back}>
-                Back
-              </Button>
-            </div>
-          </>
+          <ReviewStep
+            drafts={drafts}
+            onEdit={setCurrent}
+            onSubmit={submit}
+            onBack={() => setCurrent(2)}
+          />
         )}
       </section>
     </div>
