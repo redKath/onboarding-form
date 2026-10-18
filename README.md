@@ -5,7 +5,7 @@ A multi-step employee onboarding form with per-step Zod validation, conditional 
 **Live:** https://onboarding-form-git-main-kats-projects-576abbd6.vercel.app/
 **Repo:** https://github.com/redKath/onboarding-form
 
-![Review step of the onboarding form](docs/screenshot.png)
+![Onboarding form, step 1 of 4](docs/screenshot.png)
 
 ## Stack
 
