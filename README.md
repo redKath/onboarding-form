@@ -53,7 +53,7 @@ End-to-end tests with Playwright run against a production build on desktop Chrom
 - **Accessibility:** axe scan on every step and the success screen (fails on serious/critical)
 - **Mobile:** happy path with no horizontal scroll
 
-Known bugs are kept as `test.fail()` tests and written up in [docs/bugs-found.md](docs/bugs-found.md).
+Known bugs are kept as `test.fail()` tests that link to their GitHub issue.
 
 **Run**
 

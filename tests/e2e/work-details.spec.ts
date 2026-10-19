@@ -144,7 +144,7 @@ test.describe("Work details", () => {
       await onboarding.expectNoError("Contract end date is required");
     });
 
-    // Bug 1 in docs/bugs-found.md
+    // https://github.com/redKath/onboarding-form/issues/8
     test.fail(
       "does not show a stale error when switching back to Contract",
       async ({ onboarding }) => {

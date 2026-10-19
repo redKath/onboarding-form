@@ -101,7 +101,7 @@ test.describe("Preferences", () => {
       await onboarding.expectNoError("Select a preferred office");
     });
 
-    // Bug 2 in docs/bugs-found.md
+    // https://github.com/redKath/onboarding-form/issues/9
     test.fail(
       "does not show a stale error when switching back to Onsite",
       async ({ onboarding }) => {
