@@ -101,23 +101,21 @@ test.describe("Preferences", () => {
       await onboarding.expectNoError("Select a preferred office");
     });
 
-    // https://github.com/redKath/onboarding-form/issues/9
-    test.fail(
-      "does not show a stale error when switching back to Onsite",
-      async ({ onboarding }) => {
-        await onboarding.fillPreferences({
-          ...validPreferences,
-          office: undefined,
-        });
-        await onboarding.next();
-        await onboarding.expectError("Select a preferred office");
+    test("does not show a stale error when switching back to Onsite", async ({
+      onboarding,
+    }) => {
+      await onboarding.fillPreferences({
+        ...validPreferences,
+        office: undefined,
+      });
+      await onboarding.next();
+      await onboarding.expectError("Select a preferred office");
 
-        await onboarding.workSetup("Remote").check();
-        await onboarding.workSetup("Onsite").check();
-        await expect(onboarding.office).toBeVisible();
-        await onboarding.expectNoError("Select a preferred office");
-      },
-    );
+      await onboarding.workSetup("Remote").check();
+      await onboarding.workSetup("Onsite").check();
+      await expect(onboarding.office).toBeVisible();
+      await onboarding.expectNoError("Select a preferred office");
+    });
 
     test("can be skipped for Remote", async ({ onboarding }) => {
       await onboarding.fillPreferences({

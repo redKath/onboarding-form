@@ -144,20 +144,18 @@ test.describe("Work details", () => {
       await onboarding.expectNoError("Contract end date is required");
     });
 
-    // https://github.com/redKath/onboarding-form/issues/8
-    test.fail(
-      "does not show a stale error when switching back to Contract",
-      async ({ onboarding }) => {
-        await onboarding.fillWork({ ...validWork, employmentType: "Contract" });
-        await onboarding.next();
-        await onboarding.expectError("Contract end date is required");
+    test("does not show a stale error when switching back to Contract", async ({
+      onboarding,
+    }) => {
+      await onboarding.fillWork({ ...validWork, employmentType: "Contract" });
+      await onboarding.next();
+      await onboarding.expectError("Contract end date is required");
 
-        await onboarding.employmentType("Full-time").check();
-        await onboarding.employmentType("Contract").check();
-        await expect(onboarding.contractEndDate).toBeVisible();
-        await onboarding.expectNoError("Contract end date is required");
-      },
-    );
+      await onboarding.employmentType("Full-time").check();
+      await onboarding.employmentType("Contract").check();
+      await expect(onboarding.contractEndDate).toBeVisible();
+      await onboarding.expectNoError("Contract end date is required");
+    });
 
     test("is not kept when switching from Contract to Full-time and continuing", async ({
       onboarding,

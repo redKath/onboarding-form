@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { RadioGroup } from "@/components/form/OptionGroup";
 import { SelectField } from "@/components/form/SelectField";
 import { StepNav } from "@/components/form/StepNav";
@@ -20,6 +21,7 @@ export function WorkStep({
     register,
     handleSubmit,
     watch,
+    clearErrors,
     formState: { errors },
   } = useStepForm(
     workSchema,
@@ -27,6 +29,11 @@ export function WorkStep({
     onDraft,
   );
   const isContract = watch("employmentType") === "Contract";
+
+  // A hidden field must not keep its error for when it is shown again.
+  useEffect(() => {
+    if (!isContract) clearErrors("contractEndDate");
+  }, [isContract, clearErrors]);
 
   return (
     <form
