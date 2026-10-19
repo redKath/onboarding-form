@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { CheckboxField } from "@/components/form/CheckboxField";
 import { CheckboxGroup, RadioGroup } from "@/components/form/OptionGroup";
 import { SelectField } from "@/components/form/SelectField";
@@ -24,6 +25,7 @@ export function PreferencesStep({
     register,
     handleSubmit,
     watch,
+    clearErrors,
     formState: { errors },
   } = useStepForm(
     preferencesSchema,
@@ -32,6 +34,11 @@ export function PreferencesStep({
   );
   const needsOffice = ["Hybrid", "Onsite"].includes(watch("workSetup") ?? "");
   const bioLength = (watch("bio") ?? "").length;
+
+  // A hidden field must not keep its error for when it is shown again.
+  useEffect(() => {
+    if (!needsOffice) clearErrors("office");
+  }, [needsOffice, clearErrors]);
 
   return (
     <form
